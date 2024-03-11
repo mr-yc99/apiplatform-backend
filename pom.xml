@@ -95,6 +95,12 @@
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.learnjava</groupId>
+            <artifactId>api-client-sdk</artifactId>
+            <version>0.0.4</version>
+        </dependency>
     </dependencies>
 
     <build>

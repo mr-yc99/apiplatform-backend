@@ -3,10 +3,7 @@ package com.foryaapi.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.foryaapi.annotation.AuthCheck;
-import com.foryaapi.common.BaseResponse;
-import com.foryaapi.common.DeleteRequest;
-import com.foryaapi.common.ErrorCode;
-import com.foryaapi.common.ResultUtils;
+import com.foryaapi.common.*;
 import com.foryaapi.constant.CommonConstant;
 import com.foryaapi.exception.BusinessException;
 import com.foryaapi.model.dto.apiinfo.ApiInfoAddRequest;
@@ -14,8 +11,10 @@ import com.foryaapi.model.dto.apiinfo.ApiInfoQueryRequest;
 import com.foryaapi.model.dto.apiinfo.ApiInfoUpdateRequest;
 import com.foryaapi.model.entity.ApiInfo;
 import com.foryaapi.model.entity.User;
+import com.foryaapi.model.enums.ApiStatusEnum;
 import com.foryaapi.service.ApiInfoService;
 import com.foryaapi.service.UserService;
+import com.learnjava.apiclientsdk.client.ApiClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -26,7 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
- * 帖子接口
+ * 接口管理
  *
  * @author foryaapi
  */
@@ -40,6 +39,9 @@ public class ApiInfoController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private ApiClient apiClient;
 
     // region 增删改查
 
@@ -195,5 +197,70 @@ public class ApiInfoController {
     }
 
     // endregion
+
+    /**
+     * 发布接口
+     * @param idRequest
+     * @param request
+     * @return
+     */
+    @AuthCheck(mustRole = "admin")// 这里通过aop实现
+    @PostMapping("/online")
+    public BaseResponse<Boolean> onlineApiInfo(@RequestBody IdRequest idRequest,
+                                               HttpServletRequest request) {
+
+        //判断接口是否存在
+        if( idRequest == null || idRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //判断id是否存在
+        ApiInfo apiInfoServiceById = apiInfoService.getById(idRequest.getId());
+        if(apiInfoServiceById == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //判断接口是否可用
+        //这里模拟client调用该接口就行了，使用之前开发的apiClientSDK
+        com.learnjava.apiclientsdk.model.User userClient = new com.learnjava.apiclientsdk.model.User();
+        userClient.setUserName("admin");
+        // todo 这里apiClientSDK中的请求地址是固定的，要改一下sdk
+        String userNameByPost = apiClient.getUserNameByPost(userClient);
+        if(StringUtils.isBlank(userNameByPost)) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "接口不可用");
+        }
+
+        //启用接口
+
+        apiInfoServiceById.setStatus(ApiStatusEnum.online.getValue());
+
+        return ResultUtils.success(true);
+    }
+
+
+    /**
+     * 更新接口
+     * @param idRequest
+     * @param request
+     * @return
+     */
+    @AuthCheck(mustRole = "admin")
+    @PostMapping("/offline")
+    public BaseResponse<Boolean> offlineApiInfo(@RequestBody IdRequest idRequest,
+                                               HttpServletRequest request) {
+        //判断接口是否存在
+        if( idRequest == null || idRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //判断id是否存在
+        ApiInfo apiInfoServiceById = apiInfoService.getById(idRequest.getId());
+        if(apiInfoServiceById == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        //关闭接口
+        apiInfoServiceById.setStatus(ApiStatusEnum.offline.getValue());
+
+        return ResultUtils.success(true);
+
+    }
 
 }
