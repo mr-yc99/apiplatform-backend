@@ -44,6 +44,12 @@ public class ApiInfo implements Serializable {
      */
     private String responseHeader;
 
+
+    /**
+     * 请求参数
+     */
+    private String requestParams;
+
     /**
      * 0 关闭 1 开启
      */

@@ -48,6 +48,11 @@ public class ApiInfoUpdateRequest implements Serializable {
     private String responseHeader;
 
     /**
+     * 请求参数
+     */
+    private String requestParams;
+
+    /**
      * 0 关闭 1 开启
      */
     private Integer status;

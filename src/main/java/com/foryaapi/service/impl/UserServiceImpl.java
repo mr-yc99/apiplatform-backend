@@ -1,5 +1,7 @@
 package com.foryaapi.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foryaapi.common.ErrorCode;
@@ -62,11 +64,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
             }
             // 2. 加密
-            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-            // 3. 插入数据
+            //String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+
+            //3. 分配ak sk
+            String accessKey = DigestUtil.md5Hex(userAccount + RandomUtil.randomNumbers(userAccount.length()));
+            String secretKey = DigestUtil.md5Hex(userPassword + RandomUtil.randomNumbers(userPassword.length()));
+            // 4. 插入数据
             User user = new User();
             user.setUserAccount(userAccount);
-            user.setUserPassword(encryptPassword);
+            //user.setUserPassword(encryptPassword);
+            user.setUserPassword(userPassword);
+            user.setAccessKey(accessKey);
+            user.setSecretKey(secretKey);
             boolean saveResult = this.save(user);
             if (!saveResult) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
