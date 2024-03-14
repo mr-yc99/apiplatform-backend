@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.foryaapi.mapper.UserApiInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.foryaapi.model.entity.UserApiInfo">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="userId" jdbcType="BIGINT"/>
+            <result property="apiId" column="apiId" jdbcType="BIGINT"/>
+            <result property="totalNum" column="totalNum" jdbcType="INTEGER"/>
+            <result property="leftNum" column="leftNum" jdbcType="INTEGER"/>
+            <result property="status" column="status" jdbcType="INTEGER"/>
+            <result property="update_time" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="create_time" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="is_deleted" column="is_deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,userId,apiId,
+        totalNum,leftNum,status,
+        update_time,create_time,is_deleted
+    </sql>
+
+    <select id="selectByApiIdAndUserId" resultType="long">
+        SELECT id
+        FROM user_api_info
+        WHERE apiId = #{apiId} AND userId = #{userId} AND is_deleted = 0
+    </select>
+
+</mapper>
