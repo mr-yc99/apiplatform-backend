@@ -47,6 +47,7 @@ public class ApiInfo implements Serializable {
 
     /**
      * 请求参数
+     * {["name": "username", "type": "string"]}
      */
     private String requestParams;
 

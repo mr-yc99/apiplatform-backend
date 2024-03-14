@@ -3,6 +3,7 @@ package com.foryaapi.service;
 import com.foryaapi.model.entity.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
@@ -14,7 +15,6 @@ import javax.annotation.Resource;
  */
 @SpringBootTest
 class UserServiceTest {
-
     @Resource
     private UserService userService;
 
@@ -48,7 +48,7 @@ class UserServiceTest {
     @Test
     void userRegister() {
         String userAccount = "foryaapi";
-        String userPassword = "";
+        String userPassword = "123456";
         String checkPassword = "123456";
         try {
             long result = userService.userRegister(userAccount, userPassword, checkPassword);
@@ -60,7 +60,7 @@ class UserServiceTest {
             userPassword = "123456";
             result = userService.userRegister(userAccount, userPassword, checkPassword);
             Assertions.assertEquals(-1, result);
-            userAccount = "yu pi";
+            userAccount = "for ya";
             userPassword = "12345678";
             result = userService.userRegister(userAccount, userPassword, checkPassword);
             Assertions.assertEquals(-1, result);

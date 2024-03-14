@@ -1,5 +1,6 @@
 package com.foryaapi.controller;
 
+import cn.hutool.core.text.split.SplitIter;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.foryaapi.annotation.AuthCheck;
@@ -7,6 +8,7 @@ import com.foryaapi.common.*;
 import com.foryaapi.constant.CommonConstant;
 import com.foryaapi.exception.BusinessException;
 import com.foryaapi.model.dto.apiinfo.ApiInfoAddRequest;
+import com.foryaapi.model.dto.apiinfo.ApiInfoInvokeRequest;
 import com.foryaapi.model.dto.apiinfo.ApiInfoQueryRequest;
 import com.foryaapi.model.dto.apiinfo.ApiInfoUpdateRequest;
 import com.foryaapi.model.entity.ApiInfo;
@@ -14,6 +16,7 @@ import com.foryaapi.model.entity.User;
 import com.foryaapi.model.enums.ApiStatusEnum;
 import com.foryaapi.service.ApiInfoService;
 import com.foryaapi.service.UserService;
+import com.google.gson.Gson;
 import com.learnjava.apiclientsdk.client.ApiClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -237,7 +240,7 @@ public class ApiInfoController {
 
 
     /**
-     * 更新接口
+     * 下线接口
      * @param idRequest
      * @param request
      * @return
@@ -255,12 +258,59 @@ public class ApiInfoController {
         if(apiInfoServiceById == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-
         //关闭接口
         apiInfoServiceById.setStatus(ApiStatusEnum.offline.getValue());
-
         return ResultUtils.success(true);
-
     }
 
+    /**
+     * 测试调用接口
+     * @param apiInfoInvokeRequest
+     * @param request
+     * @return
+     */
+
+    @PostMapping("/invoke")
+    public BaseResponse<Object> invokeApiInfo(@RequestBody ApiInfoInvokeRequest apiInfoInvokeRequest,
+                                                HttpServletRequest request) {
+        Long id = apiInfoInvokeRequest.getId();
+        ApiInfo apiInfoServiceById = apiInfoService.getById(id);
+
+        //判断接口是否存在
+        if( apiInfoInvokeRequest == null || apiInfoInvokeRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        //判断id是否存在
+        if(apiInfoServiceById == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        //判断接口状态
+        if(apiInfoServiceById.getStatus() == ApiStatusEnum.offline.getValue()) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "接口已关闭");
+        }
+
+        //接口调用,先做校验
+        User loginUser = userService.getLoginUser(request);
+        String secretKey = loginUser.getSecretKey();
+        String accessKey = loginUser.getAccessKey();
+        //使用用户的ak sk
+        ApiClient tempClient = new ApiClient(accessKey, secretKey);
+        //apiInfoInvokeRequest.getUserRequestParams()是一个json类型的字符串
+        String userRequestParams = apiInfoInvokeRequest.getUserRequestParams();
+        Gson gson = new Gson();
+        com.learnjava.apiclientsdk.model.User user = gson.fromJson(userRequestParams, com.learnjava.apiclientsdk.model.User.class);
+
+        String userNameByPost = tempClient.getUserNameByPost(user);
+
+        return ResultUtils.success(userNameByPost);
+    }
+    //@PostMapping("/test")
+    //public ApiInfoInvokeRequest testApiInfo(@RequestBody ApiInfoInvokeRequest apiInfoInvokeRequest,
+    //                                          HttpServletRequest request) {
+    //    System.out.println(apiInfoInvokeRequest);
+    //
+    //    return apiInfoInvokeRequest;
+    //}
 }
